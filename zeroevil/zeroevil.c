@@ -31,6 +31,9 @@
 
 # include "zeroevil.h"
 
+# if LINUX_VERSION_CODE <= KERNEL_VERSION(3,0,0) 
+#define X86_CR0_WP_BIT 16
+# endif
 
 // WARN: This can be cheated if someone places a faked
 // but unmodified sys_call_table before the real one.
@@ -312,14 +315,16 @@ set_lstar_sct(u32 address)
 }
 
 
+# if LINUX_VERSION_CODE >= KERNEL_VERSION(3,0,0) 
 // INFO: See also phys_to_virt.
-extern unsigned long phys_base;
+extern unsigned long phys_base;		// kernel2.6.32 don't contain this value
 
 void *
 phys_to_virt_kern(phys_addr_t address)
 {
     return (void *)(address - phys_base + __START_KERNEL_map);
 }
+# endif
 
 # endif // defined(__x86_64__)
 

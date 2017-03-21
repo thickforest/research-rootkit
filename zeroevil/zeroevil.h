@@ -24,6 +24,7 @@
 
 
 # ifndef CPP
+# include <linux/version.h>
 # include <linux/module.h>
 // filp_open, filp_close.
 # include <linux/fs.h>

