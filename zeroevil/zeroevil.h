@@ -159,11 +159,16 @@ print_ascii(void *addr, size_t count, const char *prompt);
 
 // INFO: I only use ``pr_alert`` at present.
 // TODO: When wanting more, e.g. ``pr_info``, I will add them.
+# ifdef DEBUG
 # define fn_alert(fmt, ...) \
     fn_printk(KERN_ALERT, fmt, ##__VA_ARGS__)
 
 # define fm_alert(fmt, ...) \
     fm_printk(KERN_ALERT, fmt, ##__VA_ARGS__)
+# else
+# define fn_alert(fmt, ...) 
+# define fm_alert(fmt, ...) 
+# endif
 
 
 // Hooking helpers for sys_call_table .

